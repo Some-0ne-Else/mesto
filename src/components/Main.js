@@ -4,7 +4,7 @@ import editButtonImage from '../images/profile__edit-button_image.svg';
 import {
     userInfoPostfix,
     cardsPostfix,
-} from '../utils/constants.js';
+} from '../utils/utils.js';
 import api from '../utils/Api.js';
 
 function Main({ onEditAvatar, onEditProfile, onAddPlace, onCardClick }) {

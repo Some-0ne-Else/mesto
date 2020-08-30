@@ -19,7 +19,6 @@ function App() {
   function handleEditProfileClick() {
     setEditProfilePopupOpen(true);
   }
-
   function handleAddPlaceClick() {
     setAddPlacePopupOpen(true);
   }
@@ -71,4 +70,3 @@ function App() {
 
 
 export default App;
-

@@ -1,4 +1,4 @@
-import {token, baseUrl, cohort} from './constants.js';
+import {token, baseUrl, cohort} from './utils.js';
 
 class Api {
   constructor(token, baseUrl, cohort) {

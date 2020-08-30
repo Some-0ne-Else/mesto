@@ -12,7 +12,6 @@ const popupVocation = document.querySelector('#vocation');
 const popupAvatar = document.querySelector('#link');
 
 /* config */
-const targetContainer = '.elements'; // target for inserting new instances of Card
 const cardTemplate = '.element__template';
 const token = '91f20ff1-daca-4d5c-889a-e104c276a690';
 const idOnServer = 'a2ce638f0c69119d45d04bb7';
@@ -44,19 +43,12 @@ export {
   popupFullName,
   popupVocation,
   popupAvatar,
-  targetContainer,
   cardTemplate,
   configValidation,
-  // editFormValidaion,
-  // addFormValidation,
-  // avatarFormValidation,
   token,
   cohort,
   baseUrl,
   userInfoPostfix,
   cardsPostfix,
   idOnServer,
-  // editActionButton,
-  // avatarActionButton,
-  // addActionButton,
 };
