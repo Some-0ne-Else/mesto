@@ -1,5 +1,4 @@
 import './index.css';
-/* Извините, был в командировке, поэтому такая большая задержка с внесением изменений. */
 import {
   editButton,
   addButton,
@@ -36,31 +35,55 @@ import Api from '../components/Api.js';
 
 /* creating instances of rendering logic */
 const api = new Api(token, baseUrl, cohort);
-const enlargePopupInstance = new PopupWithImage('.popup-enlarge');
-const fetchedCards = api.fetchData(cardsPostfix);
-const fetchedUserInfo = api.fetchData(userInfoPostfix);
-const userData = new UserInfo({ fullName: profileFullName, vocation: profileVocation, avatar: profileAvatar });
-const avatarPopupInstance = new PopupWithForm('.popup_avatar', () => {
-  showSavingState(avatarActionButton)
-  api.updateAvatar(userInfoPostfix, popupAvatar.value)
-    .then((data) => { profileAvatar.src = data.avatar; avatarActionButton.textContent = "Сохранить"; })
-});
 
-/* set data from server to page */
-fetchedUserInfo.then((result) => { userData.setUserInfo(result); });
+Promise.all([api.fetchData(userInfoPostfix), api.fetchData(cardsPostfix),]).then((results) => {
+  const userData = new UserInfo({ fullName: profileFullName, vocation: profileVocation, avatar: profileAvatar });
+  const editPopupInstance = new PopupWithForm('.popup_edit', (formData) => {
+    userData.setUserInfo(formData);
+    showSavingState(editActionButton)
+    api.editProfile(userInfoPostfix, formData.name, formData.about).then(() => { editActionButton.textContent = "Сохранить" });
+  });
+  const addPopupInstance = new PopupWithForm('.popup_add', (formData) => {
+    showSavingState(addActionButton)
+    api.postCard(cardsPostfix, formData.name, formData.url)
+      .then((result) => {
+        addActionButton.textContent = "Создать";
+        const card = new Card(formData.name, formData.url, result.likes, result._id, result.owner._id, idOnServer,
+          enlargePopupInstance.open.bind(enlargePopupInstance),
+          deletePopupInstance.open.bind(deletePopupInstance, result._id),
+          (evt) => {
+            const isLiked = card.isLiked();
+            card.handleCounter(evt);
+            api.likeCard(cardsPostfix, result._id, result.likes, idOnServer, isLiked).then((result) => card._likesArray = result.likes);
+          },
+          cardTemplate);
+        const cardElement = card.generateCard();
+        cardSection.addItem(cardElement);
+      });
+  });
+  const enlargePopupInstance = new PopupWithImage('.popup-enlarge');
+  const avatarPopupInstance = new PopupWithForm('.popup_avatar', () => {
+    showSavingState(avatarActionButton)
+    api.updateAvatar(userInfoPostfix, popupAvatar.value)
+      .then((data) => { profileAvatar.src = data.avatar; avatarActionButton.textContent = "Сохранить"; })
+  });
+  const deletePopupInstance = new PopupWithModal('.popup_delete', (e, cardId) => {
+    api.deleteCard(`${cardsPostfix}/${cardId}`).then(() => {
+      const elementToDelete = e.target.closest('.element');
+      elementToDelete.remove();
+    })
+  });
 
-/*make it in global scope, mb there is another better way */
-let cardSection;
-fetchedCards.then((result) => {
-  cardSection = new Section({
-    items: result.reverse(),
+  userData.setUserInfo(results[0]);
+  const cardSection = new Section({
+    items: results[1].reverse(),
     renderer: (item) => {
       const card = new Card(item.name, item.link, item.likes, item._id, item.owner._id, idOnServer,
         enlargePopupInstance.open.bind(enlargePopupInstance),
         deletePopupInstance.open.bind(deletePopupInstance, item._id),
         (evt, cardId) => {
           const isLiked = card.isLiked();
-          card.handleCounter(evt); /* Надеюсь, я правильно вас понял */
+          card.handleCounter(evt);
           api.likeCard(cardsPostfix, item._id, item.likes, idOnServer, isLiked).then((result) => card._likesArray = result.likes);
         },
         cardTemplate);
@@ -69,41 +92,14 @@ fetchedCards.then((result) => {
     },
   }, targetContainer);
   cardSection.renderItems();
-});
+
+
+
+
+
 
 /* making instances of popup clases */
-const editPopupInstance = new PopupWithForm('.popup_edit', (formData) => {
-  userData.setUserInfo(formData);
-  showSavingState(editActionButton)
-  api.editProfile(userInfoPostfix, formData.name, formData.about).then(() => { editActionButton.textContent = "Сохранить" });
-});
 
-const deletePopupInstance = new PopupWithModal('.popup_delete', (e, cardId) => {
-  api.deleteCard(`${cardsPostfix}/${cardId}`).then(() => {
-    const elementToDelete = e.target.closest('.element');
-    elementToDelete.remove();
-  })
-});
-
-const addPopupInstance = new PopupWithForm('.popup_add', (formData) => {
-  showSavingState(addActionButton)
-  api.postCard(cardsPostfix, formData.name, formData.url)
-    .then((result) => {
-      addActionButton.textContent = "Создать";
-      console.log(result);
-      const card = new Card(formData.name, formData.url, result.likes, result._id, result.owner._id, idOnServer,
-        enlargePopupInstance.open.bind(enlargePopupInstance),
-        deletePopupInstance.open.bind(deletePopupInstance, result._id),
-        (evt) => {
-          const isLiked = card.isLiked();
-          card.handleCounter(evt);
-          api.likeCard(cardsPostfix, result._id, result.likes, idOnServer, isLiked).then((result) => card._likesArray = result.likes);
-        },
-        cardTemplate);
-      const cardElement = card.generateCard();
-      cardSection.addItem(cardElement);
-    });
-});
 
 function editButtonHandler() {
   editFormValidaion.clearValidationErrors();
@@ -138,3 +134,6 @@ enlargePopupInstance.setEventListeners();
 editFormValidaion.enableValidation();
 addFormValidation.enableValidation();
 avatarFormValidation.enableValidation();
+
+
+});
